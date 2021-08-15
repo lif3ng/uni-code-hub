@@ -13,8 +13,13 @@
 			owner,
 			repo
 		}) {
-			if (owner)
+			if (owner){
+				
 				this.repoPath = `${owner}/${repo}`
+				uni.setNavigationBarTitle({
+					title:this.repoPath
+				})
+			}
 		},
 		data() {
 			console.log('data', this.$mp)
