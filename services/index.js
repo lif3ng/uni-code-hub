@@ -13,7 +13,7 @@ export const checkCtx = async (type, name) => {
     try {
       const { type } = await instance.get(`/users/${name}`);
       return {
-        type: "github",
+        platform: "github",
         isUser: type === "User",
         name,
       };

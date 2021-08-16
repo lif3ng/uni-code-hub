@@ -16,18 +16,21 @@
 
 <script>
 import { createNamespacedHelpers, mapGetters } from "vuex";
-const { mapState, mapActions } = createNamespacedHelpers("repos");
+import { REPO_LIST_RESET } from "../../store/mutation-types";
+const { mapState, mapActions, mapMutations } = createNamespacedHelpers("repos");
 const { mapGetters: mapCtxsGetters } = createNamespacedHelpers("ctxs");
 export default {
   onLoad() {
-    console.log(this.currentCtx);
     if (!this.currentCtx) {
       uni.navigateTo({ url: "/pages/ctxs/ctxs" });
     } else {
-      // todo
-      this.loadRepos("lif3ng");
-      uni.setNavigationBarTitle({ title: "lllf3ng" });
+      const { platform, name } = this.currentCtx;
+      this.loadRepos(name);
+      uni.setNavigationBarTitle({ title: `${platform}/${name}` });
     }
+  },
+  onUnload() {
+    this[REPO_LIST_RESET]();
   },
   computed: {
     ...mapState(["repos", "loading"]),
@@ -35,6 +38,7 @@ export default {
   },
   methods: {
     ...mapActions(["loadRepos"]),
+    ...mapMutations([REPO_LIST_RESET]),
     formatDate(dateStr) {
       const d = new Date(dateStr);
       return d.toLocaleString();

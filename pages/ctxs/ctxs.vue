@@ -1,34 +1,16 @@
 <template>
   <view>
-    {{ ctxList }}
-    <uni-swipe-action>
-      <uni-swipe-action-item
-        :right-options="options"
-        @click="onClick"
-        @change="change"
-      >
-        <view>SwipeAction 基础使用场景</view>
-      </uni-swipe-action-item>
-      <!-- 使用插槽 （请自行给定插槽内容宽度）-->
-      <uni-swipe-action-item>
-        <template v-slot:left>
-          <view><text>置顶</text></view>
-        </template>
-      </uni-swipe-action-item>
-    </uni-swipe-action>
     <uni-list>
-      <uni-swipe-action>
+      <uni-swipe-action v-for="(item, index) of ctxList" :key="index">
         <uni-swipe-action-item
           :right-options="options"
-          v-for="(item, index) of ctxList"
-          :key="index"
-          @click="handleDel"
+          @click="handleDel($event, item)"
         >
           <uni-list-item
             :title="item.name"
             :note="item.isUser ? 'User' : 'Org'"
             @longpress.native="handleLongPress(item.name)"
-            @click.native="handleNavToRepos(item.type, item.name)"
+            @click.native="handleNavToRepos(item.platform, item.name)"
           ></uni-list-item>
         </uni-swipe-action-item>
       </uni-swipe-action>
@@ -46,7 +28,9 @@
 <script>
 import { createNamespacedHelpers } from "vuex";
 import uniList from "../../uni_modules/uni-list/components/uni-list/uni-list.vue";
-const { mapState, mapActions } = createNamespacedHelpers("ctxs");
+import { CTX_DEL, CTX_CURRENT_SET } from "../../store/mutation-types";
+const { mapState, mapActions, mapMutations } = createNamespacedHelpers("ctxs");
+
 export default {
   components: { uniList },
   data() {
@@ -70,31 +54,44 @@ export default {
   },
   onLoad() {},
   computed: {
-    ...mapState({ ctxList: "list" }),
+    ...mapState({ ctxList: "list", currentCtx: "current" }),
+    // ...mapGetters({ ctxList: "list" }),
+  },
+  watch: {
+    currentCtx(cur) {
+      if (cur) {
+        uni.navigateTo({ url: "/pages/repo/list" });
+      }
+    },
   },
   methods: {
     ...mapActions(["checkCtxAndSave"]),
+    ...mapMutations([CTX_DEL, CTX_CURRENT_SET]),
     async check() {
       try {
         await this.checkCtxAndSave({
-          type: "github",
+          platform: "github",
           name: this.userInputText,
         });
       } catch (e) {
         alert(e);
       }
     },
-    handleLongPress(name) {
-      console.log("long press", name);
-      // uni.showActionSheet({
-      //   itemList: ["delete"],
-      // });
+    handleNavToRepos(platform, name) {
+      this[CTX_CURRENT_SET]([platform, name]);
     },
-    handleNavToRepos(type, name) {
-      console.log("handleNavToRepos", type, name);
-    },
-    handleClick(e) {
-      console.log(e);
+    handleDel(e, item) {
+      const { platform, name, isUser } = item;
+      if (
+        window.confirm(
+          `确认删除 ${platform} ${isUser ? "user" : "org"} 【${name}】 ？`
+        )
+      ) {
+        //  todo
+        setTimeout(() => {
+          this[CTX_DEL](item);
+        }, 100);
+      }
     },
   },
 };
